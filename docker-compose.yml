@@ -1,0 +1,52 @@
+version: "3.7"
+
+networks:
+    my_custom_network:
+        name: explore_network
+        driver: bridge
+volumes:
+    mysql_data:
+
+services:
+    app:
+        container_name: explore
+        build:
+            context: .
+            dockerfile: Dockerfile
+        depends_on:
+            mysql:
+                condition: service_healthy
+        restart: on-failure
+        entrypoint: php artisan serve --host=0.0.0.0 --port=8000
+        environment:
+            - DB_HOST=${DB_HOST}
+            - DB_PORT=3306
+            - DB_DATABASE=${DB_DATABASE}
+            - DB_USERNAME=${DB_USERNAME}
+            - DB_PASSWORD=${DB_PASSWORD}
+        ports:
+            - "9000:8000"
+        stdin_open: true
+        volumes:
+            - .:/var/www
+        networks:
+            - my_custom_network
+
+    mysql:
+        container_name: explore-mysql
+        image: mysql:8.0
+        environment:
+            - MYSQL_DATABASE=${DB_DATABASE}
+            - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+        ports:
+            - "3307:3306"
+        healthcheck:
+            test: [ "CMD", "mysqladmin", "ping" ]
+            interval: 10s
+            timeout: 5s
+            retries: 3
+        volumes:
+            - mysql_data:/var/lib/mysql
+            - ./my.cnf:/etc/mysql/conf.d/my.cnf  # Mount custom config
+        networks:
+            - my_custom_network

@@ -1,0 +1,8 @@
+# Ignore vendor and node_modules
+vendor/
+node_modules/
+
+# Optional: Ignore other unnecessary files or folders
+.git/
+.dockerignore
+.env
