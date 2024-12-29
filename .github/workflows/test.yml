@@ -1,0 +1,65 @@
+name: Explore Project Test
+
+on:
+  pull_request:
+    branches:
+      - "main"  # Trigger on pull requests to the main branch
+
+jobs:
+  explore-tests:
+    runs-on: ubuntu-latest
+    name: Run Laravel Tests and Build Assets
+
+    steps:
+    # 1. Setup PHP
+    - name: Set up PHP 8.2
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+
+    # 2. Checkout the code
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # 3. Copy .env file if it doesn't exist
+    - name: Copy .env file
+      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+    # 4. Install Composer dependencies (Laravel backend)
+    - name: Install PHP dependencies
+      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+    # 5. Generate application key
+    - name: Generate app key
+      run: php artisan key:generate
+
+    # 6. Set permissions for directories (storage and cache)
+    - name: Set directory permissions
+      run: chmod -R 777 storage bootstrap/cache
+
+    # 7. Install Node.js (to run npm commands)
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 'node'  # Adjust based on your required Node version
+
+    # 8. Install NPM dependencies
+    - name: Install NPM dependencies
+      run: npm install
+
+    # 9. Run the build process (compile assets)
+    - name: Build frontend assets
+      run: npm run build
+
+    # 10. Create a mock database
+    - name: Create Database
+      run: |
+        mkdir -p database
+        touch database/database.mysql
+
+    # 11. Run Unit and Feature tests with PHPUnit/Pest
+    - name: Run tests
+      env:
+        DB_CONNECTION: mysql
+        DB_DATABASE: database/database.mysql
+      run: php artisan test
