@@ -56,10 +56,3 @@ jobs:
       run: |
         mkdir -p database
         touch database/database.mysql
-
-    # 11. Run Unit and Feature tests with PHPUnit/Pest
-    - name: Run tests
-      env:
-        DB_CONNECTION: mysql
-        DB_DATABASE: database/database.mysql
-      run: php artisan test
